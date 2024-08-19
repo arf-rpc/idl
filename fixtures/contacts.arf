@@ -1,0 +1,55 @@
+package org.example.contacts;
+
+# Contact represent a single person in the address list.
+struct Contact {
+    @optional id int64             = 0;
+    name string                    = 1;
+    surname string                 = 2;
+    @optional company Company      = 3;
+    @repeated emails string        = 4;
+    @repeated telephones Telephone = 5;
+
+    struct Telephone {
+        kind Kind     = 0;
+        string Number = 1;
+
+        enum Kind {
+            MOBILE = 0;
+            WORK = 1;
+            HOME = 2;
+            @deprecated("Use HOME")
+            HOUSE = 2;
+        }
+    }
+}
+
+# Company represents a company in which a person
+# works at.
+struct Company {
+    name string = 0;
+    website_address string = 1;
+}
+
+# GetContactRequest represents a request to obtain
+# a specific contact through a given id.
+struct GetContactRequest {
+    id int64 = 0;
+}
+
+# GetContactResposne represents the result of a GetContactRequest.
+# An absent `contact` indicates that no contact under the provided id exists.
+struct GetContactResponse {
+    @optional contact Contact = 0;
+}
+
+service ContactsService {
+    # upsert_contact creates or updates a given contact.
+    upsert_contact(Contact);
+
+    # list_contacts returns a stream of all known contacts.
+    list_contacts() -> stream Contact;
+
+    # get_contact obtains a single Contact by its ID.
+    # Also see: GetContactRequest.
+    get_contact(GetContactRequest) -> GetContactResponse;
+}

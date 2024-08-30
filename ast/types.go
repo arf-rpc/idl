@@ -8,6 +8,7 @@ type Type interface {
 	Streaming() Type
 	Optional() Type
 	Repeated() Type
+	String() string
 }
 
 type UserType struct {

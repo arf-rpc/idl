@@ -596,12 +596,22 @@ func (p *fileParser) parseMethod() (*ast.Method, error) {
 		return nil, err
 	}
 
-	var inType, outType ast.Type
+	var in []*ast.MethodParam
+	var out []ast.Type
 
 	if !p.peek().is(CloseParen) {
-		inType, err = p.parseType()
-		if err != nil {
-			return nil, err
+		for {
+			param, err := p.parseMethodParam()
+			if err != nil {
+				return nil, err
+			}
+			in = append(in, param)
+
+			if p.peek().is(Comma) {
+				p.advance()
+				continue
+			}
+			break
 		}
 	}
 
@@ -612,9 +622,31 @@ func (p *fileParser) parseMethod() (*ast.Method, error) {
 
 	if p.peek().is(Arrow) {
 		p.advance() // Consume arrow
-		outType, err = p.parseType()
-		if err != nil {
-			return nil, err
+		if p.peek().is(OpenParen) {
+			p.advance() // consume openParen
+			for {
+				t, err := p.parseMethodReturnParam()
+				if err != nil {
+					return nil, err
+				}
+				out = append(out, t)
+
+				if p.peek().is(Comma) {
+					// consume comma
+					p.advance()
+					continue
+				}
+				break
+			}
+			if _, err = p.require(CloseParen); err != nil {
+				return nil, err
+			}
+		} else {
+			outType, err := p.parseType()
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, outType)
 		}
 	}
 
@@ -626,9 +658,54 @@ func (p *fileParser) parseMethod() (*ast.Method, error) {
 	return &ast.Method{
 		Offset: offsetBetween(name, end),
 		Name:   name.Value,
-		Input:  inType,
-		Output: outType,
+		Input:  in,
+		Output: out,
 	}, nil
+}
+
+func (p *fileParser) parseMethodParam() (*ast.MethodParam, error) {
+	nameOrType, err := p.requireIdentifier()
+	if err != nil {
+		return nil, err
+	}
+
+	// In case we have `stream' or `map`, we surely have a type instead of a
+	// name.
+	if nameOrType.Value == "stream" || nameOrType.Value == "map" {
+		t, err := p.parseType()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.MethodParam{
+			Name:  "",
+			Named: false,
+			Type:  t,
+		}, nil
+	}
+
+	// in case the next value is an identifier, we can parse a type.
+	if p.peek().is(Identifier) {
+		t, err := p.parseType()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.MethodParam{
+			Name:  nameOrType.Value,
+			Named: true,
+			Type:  t,
+		}, nil
+	}
+
+	// otherwise, we have only a type
+	return &ast.MethodParam{
+		Name:  "",
+		Named: false,
+		Type:  ast.IntoType(nameOrType.Value),
+	}, nil
+}
+
+func (p *fileParser) parseMethodReturnParam() (ast.Type, error) {
+	return p.parseType()
 }
 
 func (p *fileParser) parseType() (ast.Type, error) {

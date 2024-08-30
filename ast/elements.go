@@ -160,8 +160,8 @@ func (f UnionField) String() string {
 type Method struct {
 	Offset      Offset
 	Name        string
-	Input       Type
-	Output      Type
+	Input       []*MethodParam
+	Output      []Type
 	Annotations Annotations
 	Parent      *Service
 }
@@ -169,7 +169,19 @@ type Method struct {
 func (m Method) Path() string { return pathOf(m) }
 
 func (m Method) String() string {
-	return fmt.Sprintf("Method{Name: %s, Input: %s, Output: %s, Annotations: %s}", m.Name, m.Input, m.Output, m.Annotations)
+	in := make([]string, len(m.Input))
+	for i, p := range m.Input {
+		in[i] = p.String()
+	}
+	out := make([]string, len(m.Output))
+	for i, p := range m.Output {
+		out[i] = p.String()
+	}
+	return fmt.Sprintf("Method{Name: %s, Input: [%s], Output: [%s], Annotations: %s}",
+		m.Name,
+		strings.Join(in, ", "),
+		strings.Join(out, ", "),
+		m.Annotations)
 }
 
 type Struct struct {
@@ -257,6 +269,16 @@ func (e EnumOption) Path() string {
 
 func (e EnumOption) String() string {
 	return fmt.Sprintf("EnumOption{Name: %s, Index: %d, Annotations: %s}", e.Name, e.Index, e.Annotations)
+}
+
+type MethodParam struct {
+	Name  string
+	Named bool
+	Type  Type
+}
+
+func (m MethodParam) String() string {
+	return fmt.Sprintf("MethodParam{Name: %q, Named: %t, Type: %s}", m.Name, m.Named, m.Type)
 }
 
 func pathOf(val any) string {

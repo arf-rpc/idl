@@ -103,15 +103,17 @@ func (p *Parser) processStructureTypes(s *ast.Struct) error {
 
 func (p *Parser) processServiceTypes(s *ast.Service) error {
 	for _, m := range s.Methods {
-		if m.Input != nil {
-			if err := p.resolveType(m.Input, s); err != nil {
+		for _, v := range m.Input {
+			if err := p.resolveType(v.Type, s); err != nil {
 				return err
 			}
 		}
 
 		if m.Output != nil {
-			if err := p.resolveType(m.Output, s); err != nil {
-				return err
+			for _, v := range m.Output {
+				if err := p.resolveType(v, s); err != nil {
+					return err
+				}
 			}
 		}
 	}

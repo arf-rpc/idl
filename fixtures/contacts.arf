@@ -52,12 +52,16 @@ struct GetContactResponse {
 
 service ContactsService {
     # upsert_contact creates or updates a given contact.
-    upsert_contact(Contact);
+    upsert_contact(c Contact);
 
     # list_contacts returns a stream of all known contacts.
     list_contacts() -> stream Contact;
 
     # get_contact obtains a single Contact by its ID.
     # Also see: GetContactRequest.
-    get_contact(GetContactRequest) -> GetContactResponse;
+    get_contact(r GetContactRequest) -> GetContactResponse;
+
+    find_by_name_or_email(name string, email string) -> Contact;
+
+    divide(a float32, b float32) -> (float32, float32);
 }

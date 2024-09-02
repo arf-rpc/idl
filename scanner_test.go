@@ -1,10 +1,12 @@
 package idl
 
 import (
-	"fmt"
-	"github.com/stretchr/testify/require"
+	"github.com/davecgh/go-spew/spew"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParser(t *testing.T) {
@@ -14,15 +16,19 @@ func TestParser(t *testing.T) {
 
 	fileSet, err := Parse("fixtures/contacts.arf", false)
 	require.NoError(t, err)
+	require.Len(t, fileSet, 1)
 
-	fmt.Printf("%s\n", fileSet)
+	f := fileSet[0]
+	tree := f.Tree
+	require.NotNil(t, tree)
+	spew.Dump(tree)
 
-	//assert.Equal(t, []string{"RandomBytesRequest", "RandomBytesResponse", "MessageUsingExternalType"}, tree.DeclaredMessages)
-	//assert.Equal(t, []string{"RandomBytesService", "ServiceUsingExternalTypes"}, tree.DeclaredServices)
-	//assert.Equal(t, []string{"foo", "bar"}, tree.ImportedFiles)
-	//
-	//msg, ok := tree.MessageByName("RandomBytesRequest")
-	//assert.True(t, ok)
-	//assert.Equal(t, "RandomBytesRequest", msg.Name)
-	//assert.NotEmpty(t, msg.Comments)
+	assert.Empty(t, tree.Imports)
+	assert.Equal(t, "org.example.contacts", tree.Package.Name)
+	assert.Empty(t, tree.Enums)
+
+	s0 := tree.Structures[0]
+	assert.Equal(t, s0.Name, "Contact")
+	assert.Len(t, s0.Fields, 8)
+	spew.Dump(s0)
 }

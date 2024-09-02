@@ -19,6 +19,10 @@ func validate(p *Parser) error {
 		return err
 	}
 
+	if err := v.processMethodDefinitions(); err != nil {
+		return err
+	}
+
 	if err := v.processClashes(); err != nil {
 		return err
 	}
@@ -288,6 +292,69 @@ func (v *validator) processStructureClashes(s ast.File, str *ast.Struct) error {
 				}
 				indexes[v.Plain.Index] = true
 			}
+		}
+	}
+
+	return nil
+}
+
+func (v *validator) processMethodDefinitions() error {
+	for _, f := range v.p.set {
+		for _, s := range f.Tree.Services {
+			for _, m := range s.Methods {
+				if err := v.processMethodDefinition(m); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (v *validator) processMethodDefinition(m *ast.Method) error {
+
+	// Simple rules:
+	// 1. Either no argument is named, or all of them are named.
+	// 2. Only one stream allowed in either input or output values.
+	// 3. If present, a stream must be the last argument of input/output values.
+
+	isNamed := false
+	for _, f := range m.Input {
+		isNamed = isNamed || f.Named
+	}
+
+	for i, f := range m.Input {
+		if !f.Named && isNamed {
+			return fmt.Errorf("argument %d of %s must be named (all arguments must be either named, or not)", i, m.Path())
+		}
+	}
+
+	streamCount := 0
+	for i, f := range m.Input {
+		if _, ok := f.Type.(*ast.StreamingType); ok {
+			streamCount++
+			if streamCount > 1 {
+				return fmt.Errorf("argument %d of %s is invalid: only one streaming argument is allowed", i, m.Path())
+			}
+			continue
+		}
+		if streamCount > 0 {
+			return fmt.Errorf("argument %d of %s is invalid: stream arguments must be the last argument in a method definition", i, m.Path())
+		}
+	}
+
+	streamCount = 0
+	for i, f := range m.Output {
+		if _, ok := f.(*ast.StreamingType); ok {
+			streamCount++
+			if streamCount > 1 {
+				return fmt.Errorf("output value %d of %s is invalid: only one streaming output value is allowed", i, m.Path())
+			}
+			continue
+		}
+		if streamCount > 0 {
+			return fmt.Errorf("output value %d of %s is invalid: stream value must be the last value in a method definition", i, m.Path())
 		}
 	}
 

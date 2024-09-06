@@ -9,7 +9,7 @@ struct Contact {
     @repeated emails string        = 4;
     @repeated telephones Telephone = 5;
 
-    union {
+    union social_handle {
         personal_website string = 6;
         linkedin_profile string = 7;
         twitter_handle string   = 8;
@@ -19,7 +19,7 @@ struct Contact {
 
     struct Telephone {
         kind Kind     = 0;
-        string Number = 1;
+        number string = 1;
 
         enum Kind {
             MOBILE = 0;

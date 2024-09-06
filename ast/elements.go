@@ -145,6 +145,7 @@ func (f PlainField) String() string {
 type UnionField struct {
 	Fields []*Field
 	Parent *Field
+	Name   string
 }
 
 func (f UnionField) Path() string { return pathOf(f) }
@@ -154,7 +155,7 @@ func (f UnionField) String() string {
 	for i, f := range f.Fields {
 		fields[i] = f.String()
 	}
-	return fmt.Sprintf("UnionField{%s}", strings.Join(fields, ", "))
+	return fmt.Sprintf("UnionField{Name: %s, Fields: [%s]}", f.Name, strings.Join(fields, ", "))
 }
 
 type Method struct {

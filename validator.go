@@ -168,6 +168,13 @@ func (v *validator) processStructureFieldAnnotations(file ast.File, f *ast.Field
 				return err
 			}
 		}
+	} else {
+		if optional != nil {
+			f.Plain.Type = f.Plain.Type.Optional()
+		}
+		if repeated != nil {
+			f.Plain.Type = f.Plain.Type.Repeated()
+		}
 	}
 
 	return nil

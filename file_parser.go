@@ -382,7 +382,10 @@ func (p *fileParser) parseUnion() (*ast.Field, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	name, err := p.requireIdentifier()
+	if err != nil {
+		return nil, err
+	}
 	_, err = p.require(OpenCurly)
 	if err != nil {
 		return nil, err
@@ -415,6 +418,7 @@ func (p *fileParser) parseUnion() (*ast.Field, error) {
 	f := &ast.Field{
 		Offset: offsetBetween(start, end),
 		Union: &ast.UnionField{
+			Name:   name.Value,
 			Fields: fields,
 		},
 	}

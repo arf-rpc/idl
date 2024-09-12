@@ -676,9 +676,14 @@ func (p *fileParser) parseMethodParam() (*ast.MethodParam, error) {
 	// In case we have `stream' or `map`, we surely have a type instead of a
 	// name.
 	if nameOrType.Value == "stream" || nameOrType.Value == "map" {
+		p.cur--
 		t, err := p.parseType()
 		if err != nil {
 			return nil, err
+		}
+		if nameOrType.Value == "stream" {
+			t = t.Streaming()
+		} else if nameOrType.Value == "map" {
 		}
 		return &ast.MethodParam{
 			Name:  "",

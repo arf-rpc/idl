@@ -114,6 +114,7 @@ type Field struct {
 	Union       *UnionField
 	Plain       *PlainField
 	Parent      *Struct
+	Comments    []string
 }
 
 func (f *Field) Path() string { return pathOf(f) }
@@ -164,6 +165,7 @@ type Method struct {
 	Input       []*MethodParam
 	Output      []Type
 	Annotations Annotations
+	Comments    []string
 	Parent      *Service
 }
 
@@ -193,6 +195,7 @@ type Struct struct {
 	Structs     []*Struct
 	Annotations Annotations
 	Parent      *Struct
+	Comments    []string
 }
 
 func (s Struct) Path() string { return pathOf(s) }
@@ -222,6 +225,7 @@ type Service struct {
 	Name        string
 	Methods     []*Method
 	Annotations Annotations
+	Comments    []string
 }
 
 func (s Service) Path() string { return pathOf(s) }
@@ -241,6 +245,7 @@ type Enum struct {
 	Options     []*EnumOption
 	Annotations Annotations
 	Parent      *Struct
+	Comments    []string
 }
 
 func (e Enum) Path() string {
@@ -261,6 +266,7 @@ type EnumOption struct {
 	Name        string
 	Index       int
 	Annotations Annotations
+	Comments    []string
 	Parent      *Enum
 }
 

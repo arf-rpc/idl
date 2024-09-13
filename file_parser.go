@@ -96,8 +96,11 @@ func (p *fileParser) consumeBlanks() {
 		pk := p.peek()
 		if pk.is(LineBreak) || pk.is(Indentation) {
 			p.advance()
-		} else {
+		} else if pk.is(Comment) {
+			p.advance()
 			p.compileComment(start)
+			return
+		} else {
 			return
 		}
 	}
@@ -121,14 +124,18 @@ func (p *fileParser) compileComment(start int) {
 	}
 	// At this point we may have something that looks like a comment that
 	// should be added to the next object. Let's stash that one.
-	if p.peek().is(LineBreak) {
-		p.currentComment = nil
-		return
+	for {
+		if p.peek().is(LineBreak) || p.peek().is(Indentation) {
+			p.advance()
+		} else if p.peek().is(Comment) {
+			objects = append(objects, p.advance())
+		} else {
+			break
+		}
 	}
 
 	var comment []string
 	for _, v := range objects {
-		p.advance()
 		if v.is(Comment) {
 			comment = append(comment, v.Value)
 		}
@@ -216,6 +223,12 @@ func (p *fileParser) parseImport() (*ast.Import, error) {
 	}, nil
 }
 
+func (p *fileParser) getCurrentComment() []string {
+	comm := p.currentComment
+	p.currentComment = nil
+	return comm
+}
+
 func (p *fileParser) parseStructEnumOrService() (any, error) {
 	p.consumeBlanks()
 
@@ -252,6 +265,7 @@ func (p *fileParser) parseStructEnumOrService() (any, error) {
 			return nil, err
 		}
 		en.Annotations = annotations
+		en.Comments = p.getCurrentComment()
 		return en, nil
 
 	default:
@@ -264,6 +278,7 @@ func (p *fileParser) parseService() (*ast.Service, error) {
 	if err != nil {
 		return nil, err
 	}
+	comments := p.getCurrentComment()
 
 	name, err := p.requireIdentifier()
 	if err != nil {
@@ -302,9 +317,10 @@ func (p *fileParser) parseService() (*ast.Service, error) {
 	}
 
 	s := &ast.Service{
-		Offset:  offsetBetween(start, end),
-		Name:    name.Value,
-		Methods: mets,
+		Offset:   offsetBetween(start, end),
+		Name:     name.Value,
+		Methods:  mets,
+		Comments: comments,
 	}
 
 	for _, met := range mets {
@@ -320,6 +336,7 @@ func (p *fileParser) parseStruct() (*ast.Struct, error) {
 	if err != nil {
 		return nil, err
 	}
+	comments := p.getCurrentComment()
 	name, err := p.requireIdentifier()
 	if err != nil {
 		return nil, err
@@ -373,11 +390,12 @@ func (p *fileParser) parseStruct() (*ast.Struct, error) {
 	}
 
 	s := &ast.Struct{
-		Offset:  offsetBetween(start, end),
-		Name:    name.Value,
-		Fields:  fields,
-		Enums:   enum,
-		Structs: structs,
+		Offset:   offsetBetween(start, end),
+		Name:     name.Value,
+		Fields:   fields,
+		Enums:    enum,
+		Structs:  structs,
+		Comments: comments,
 	}
 
 	for _, field := range s.Fields {
@@ -469,6 +487,7 @@ func (p *fileParser) parseField() (*ast.Field, error) {
 	if err != nil {
 		return nil, err
 	}
+	comments := p.getCurrentComment()
 
 	fieldType, err := p.parseType()
 	if err != nil {
@@ -495,7 +514,8 @@ func (p *fileParser) parseField() (*ast.Field, error) {
 	}
 
 	f := &ast.Field{
-		Offset: offsetBetween(fieldName, end),
+		Comments: comments,
+		Offset:   offsetBetween(fieldName, end),
 		Plain: &ast.PlainField{
 			Name:  fieldName.Value,
 			Type:  fieldType,
@@ -513,6 +533,7 @@ func (p *fileParser) parseEnum() (*ast.Enum, error) {
 	if err != nil {
 		return nil, err
 	}
+	comment := p.getCurrentComment()
 	name, err := p.requireIdentifier()
 	if err != nil {
 		return nil, err
@@ -552,9 +573,10 @@ func (p *fileParser) parseEnum() (*ast.Enum, error) {
 	}
 
 	e := &ast.Enum{
-		Offset:  offsetBetween(start, end),
-		Name:    name.Value,
-		Options: opts,
+		Offset:   offsetBetween(start, end),
+		Name:     name.Value,
+		Options:  opts,
+		Comments: comment,
 	}
 
 	for _, opt := range e.Options {
@@ -584,9 +606,10 @@ func (p *fileParser) parseEnumField() (*ast.EnumOption, error) {
 	}
 
 	return &ast.EnumOption{
-		Offset: offsetBetween(start, val),
-		Name:   start.Value,
-		Index:  int(parsedIdx),
+		Offset:   offsetBetween(start, val),
+		Name:     start.Value,
+		Index:    int(parsedIdx),
+		Comments: p.getCurrentComment(),
 	}, nil
 }
 
@@ -630,6 +653,7 @@ func (p *fileParser) parseMethod() (*ast.Method, error) {
 	if err != nil {
 		return nil, err
 	}
+	comments := p.getCurrentComment()
 
 	_, err = p.require(OpenParen)
 	if err != nil {
@@ -696,10 +720,11 @@ func (p *fileParser) parseMethod() (*ast.Method, error) {
 	}
 
 	return &ast.Method{
-		Offset: offsetBetween(name, end),
-		Name:   name.Value,
-		Input:  in,
-		Output: out,
+		Offset:   offsetBetween(name, end),
+		Name:     name.Value,
+		Input:    in,
+		Output:   out,
+		Comments: comments,
 	}, nil
 }
 

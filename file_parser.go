@@ -8,11 +8,12 @@ import (
 )
 
 type fileParser struct {
-	data []*Token
-	cur  int
-	len  int
-	tree ast.Tree
-	path string
+	data           []*Token
+	cur            int
+	len            int
+	tree           ast.Tree
+	path           string
+	currentComment []string
 }
 
 func (p *fileParser) isAtEnd() bool {
@@ -90,14 +91,49 @@ func (p *fileParser) advance() *Token {
 }
 
 func (p *fileParser) consumeBlanks() {
+	start := p.cur
 	for {
 		pk := p.peek()
-		if pk.is(LineBreak) || pk.is(Indentation) || pk.is(Comment) {
+		if pk.is(LineBreak) || pk.is(Indentation) {
 			p.advance()
 		} else {
+			p.compileComment(start)
 			return
 		}
 	}
+}
+
+func (p *fileParser) compileComment(start int) {
+	objects := p.data[start:p.cur]
+	if len(objects) == 0 {
+		p.currentComment = nil
+		return
+	}
+	startAt := -1
+	for i, obj := range objects {
+		if !obj.is(LineBreak) && !obj.is(Indentation) {
+			startAt = i
+		}
+	}
+	if startAt == -1 {
+		p.currentComment = nil
+		return
+	}
+	// At this point we may have something that looks like a comment that
+	// should be added to the next object. Let's stash that one.
+	if p.peek().is(LineBreak) {
+		p.currentComment = nil
+		return
+	}
+
+	var comment []string
+	for _, v := range objects {
+		p.advance()
+		if v.is(Comment) {
+			comment = append(comment, v.Value)
+		}
+	}
+	p.currentComment = comment
 }
 
 func (p *fileParser) errorf(format string, args ...any) error {

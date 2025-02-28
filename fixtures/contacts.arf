@@ -1,0 +1,64 @@
+package org.example.arf;
+
+import "company";
+
+# Contact represent a single person in the address list.
+struct Contact {
+    id               optional<int64>    = 0;
+    name             string             = 1;
+    surname          string             = 2;
+    company          optional<org.example.arf.Company>  = 3;
+    emails           array<string>      = 4;
+    telephones       array<Telephone>   = 5;
+    personal_website optional<string>   = 6;
+    linkedin_profile optional<string>   = 7;
+    @deprecated("hello?")
+    twitter_handle   optional<string>   = 8;
+
+    additional_info map<string, string> = 9;
+
+    struct Telephone {
+        kind Kind     = 0;
+        number string = 1;
+
+        enum Kind {
+            MOBILE = 0;
+            WORK = 1;
+            HOME = 2;
+            @deprecated("Use HOME")
+            HOUSE = 2;
+        }
+    }
+}
+
+# GetContactRequest represents a request to obtain
+# a specific contact through a given id.
+struct GetContactRequest {
+    id int64 = 0;
+}
+
+# GetContactResponse represents the result of a GetContactRequest.
+# An absent `contact` indicates that no contact under the provided id exists.
+struct GetContactResponse {
+    contact optional<Contact> = 0;
+}
+
+@unknown_annotation("hello")
+service ContactsService {
+    # upsert_contact creates or updates a given contact.
+    @unknown_annotation("hello")
+    upsert_contact(c Contact);
+
+    # list_contacts returns a stream of all known contacts.
+    list_contacts() -> stream Contact;
+
+    upsert_contacts(s Contact) -> stream Contact;
+
+    # get_contact obtains a single Contact by its ID.
+    # Also see: GetContactRequest.
+    get_contact(r GetContactRequest) -> GetContactResponse;
+
+    find_by_name_or_email(name string, email string) -> Contact;
+
+    divide(a float32, b float32) -> (float32, float32);
+}

@@ -1,0 +1,8 @@
+package org.example.arf;
+
+# Company represents a company in which a person
+# works at.
+struct Company {
+    name string = 0;
+    website_address string = 1;
+}

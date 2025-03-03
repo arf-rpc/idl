@@ -14,6 +14,7 @@ type PackageTree struct {
 	Structures []Struct
 	Enums      []Enum
 	Services   []Service
+	Imports    []Import
 	Package    string
 }
 
@@ -36,6 +37,9 @@ func (t *Tree) AddFile(file *File) {
 	}
 	for _, v := range file.Services {
 		tree.Services = append(tree.Services, v)
+	}
+	for _, v := range file.Imports {
+		tree.Imports = append(tree.Imports, v)
 	}
 }
 

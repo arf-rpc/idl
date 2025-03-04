@@ -83,8 +83,9 @@ func (p *Package) BaseFQN() string { return p.Position.File.BaseFQN() }
 func (p *Package) FQN() string     { return p.BaseFQN() }
 
 type Import struct {
-	Position Position
-	Value    string
+	Position      Position
+	Value         string
+	ResolvedValue string
 }
 
 func (i *Import) Kind() string    { return "Import" }

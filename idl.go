@@ -81,7 +81,7 @@ func (f *frontEnd) parseImports(file *ast.File) []error {
 		return nil
 	}
 	var errs []string
-	for _, imp := range file.Imports {
+	for i, imp := range file.Imports {
 		p := imp.Value
 		if !filepath.IsAbs(p) {
 			p = filepath.Join(filepath.Dir(file.Path), p)
@@ -115,6 +115,7 @@ func (f *frontEnd) parseImports(file *ast.File) []error {
 			errs = append(errs, fmt.Sprintf("Cannot import %s: %s; at %s, line %d, column %d", imp.Value, err.Error(), imp.Position.Filename, imp.Position.Line, imp.Position.Column))
 			continue
 		}
+		file.Imports[i].ResolvedValue = p
 	}
 
 	ret := make([]error, len(errs))

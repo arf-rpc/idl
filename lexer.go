@@ -128,6 +128,7 @@ func (s *lexer) scan() {
 		case ' ', '\n', '\t', '\r':
 			s.advance()
 		case '#':
+			s.advance()
 			s.mark()
 			for !s.eof() && s.peek() != '\n' {
 				s.advance()

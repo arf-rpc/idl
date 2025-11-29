@@ -1,0 +1,4 @@
+package p;
+import "foo.arf";
+import "foo.arf" as foo; # implicit alias would be "foo" too
+struct S{ f string; }

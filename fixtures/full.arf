@@ -1,0 +1,111 @@
+package v1beta1.demo.allfeatures;
+
+import "common" as common;
+import "utility";
+
+# Top-level annotation examples
+@deprecated
+@foo
+struct Everything {
+    # Primitive fields
+
+    a_bool          bool;
+    a_int8          int8;
+    a_int16         int16;
+    a_int32         int32;
+    a_int64         int64;
+    a_uint8         uint8;
+    a_uint16        uint16;
+    a_uint32        uint32;
+    a_uint64        uint64;
+    a_float32       float32;
+    a_float64       float64;
+    a_str           string;
+    a_bytes         bytes;
+
+    # Composite fields
+
+    a_opt_string    optional<string>;
+    a_opt_nested    optional<Nested>;
+    a_array_int     array<int32>;
+    a_array_struct  array<Nested>;
+    a_map_str_u32   map<string, uint32>;
+    a_map_str_arr   map<string, array<int64>>;
+
+    a_from_other_file common.Test;
+    a_from_other_file_2 utility.Test2;
+
+    # Nested struct
+    struct Nested {
+        id   uint32;
+        name string;
+        nums array<int32>;
+    }
+}
+
+# Enum with annotations
+@deprecated
+enum Mode {
+    @foo
+    FIRST = 1;
+    SECOND = 2;
+    THIRD = 3;
+}
+
+# Service containing all 16 method signatures
+service FeatureTestService {
+
+    # NNNN — no input, no output, no streams
+    NNNN();
+
+    # NNNY — no input, no unary output, server stream only
+    NNNY() -> stream Everything.Nested;
+
+    # NNYN — client-stream only
+    NNYN(stream Everything.Nested);
+
+    # NNYY — bidi streams only
+    NNYY(stream Everything.Nested) -> stream Everything.Nested;
+
+    # NYNN — unary output only
+    NYNN() -> Everything;
+
+    # NYNY — unary output + server stream
+    NYNY() -> (Everything, stream Everything.Nested);
+
+    # NYYN — unary output + client stream
+    NYYN(stream Everything.Nested) -> Everything;
+
+    # NYYY — unary output + both streams
+    NYYY(stream Everything.Nested) -> (Everything, stream Everything.Nested);
+
+    # YNNN — unary input only
+    YNNN(i Everything);
+
+    # YNNY — unary input + server stream
+    YNNY(i Everything) -> stream Everything.Nested;
+
+    # YNYN — unary input + client stream
+    YNYN(i Everything, stream Everything.Nested);
+
+    # YNYY — unary input + bidi streams
+    YNYY(i Everything, stream Everything.Nested) -> stream Everything.Nested;
+
+    # YYNN — unary input + unary output
+    YYNN(i Everything) -> Everything;
+
+    # YYNY — unary input + unary output + server stream
+    YYNY(i Everything) -> (Everything, stream Everything.Nested);
+
+    # YYYN — unary input + unary output + client stream
+    YYYN(i Everything, stream Everything.Nested) -> Everything;
+
+    # YYYY — unary input + unary output + both streams
+    YYYY(i Everything, stream Everything.Nested) -> (Everything, stream Everything.Nested);
+}
+
+# Reopen service
+
+service FeatureTestService {
+    OtherMethod() -> Everything;
+}

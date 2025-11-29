@@ -1,0 +1,5 @@
+package v1beta1.other.common;
+
+struct Test {
+    name string;
+}

@@ -11,8 +11,16 @@ import (
 	"github.com/arf-rpc/idl/ast"
 )
 
+func Parse(entrypoint string) (*ast.Tree, error) {
+	fe, err := New(entrypoint)
+	if err != nil {
+		return nil, err
+	}
+	return fe.Run()
+}
+
 type Frontend interface {
-	Run() error
+	Run() (*ast.Tree, error)
 }
 
 type frontend struct {
@@ -34,6 +42,7 @@ func New(entrypoint string) (Frontend, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &frontend{
 		entrypoint:     absPath,
 		workingDir:     path.Dir(absPath),
@@ -42,18 +51,26 @@ func New(entrypoint string) (Frontend, error) {
 	}, nil
 }
 
-func (f *frontend) Run() error {
+func (f *frontend) Run() (*ast.Tree, error) {
 	if err := f.parse(f.entrypoint); err != nil {
-		return err
+		return nil, err
 	}
 	if err := validatePhase1(f.files, f.entrypoint); err != nil {
-		return err
+		return nil, err
 	}
 	if err := validatePhase2(f.files, f.entrypoint); err != nil {
-		return err
+		return nil, err
+	}
+	if err := validatePhase3(f.files, f.entrypoint); err != nil {
+		return nil, err
 	}
 
-	return validatePhase3(f.files, f.entrypoint)
+	tree := &ast.Tree{}
+	for _, f := range f.files {
+		tree.AddFile(f)
+	}
+
+	return tree, nil
 }
 
 func (f *frontend) parse(path string) error {

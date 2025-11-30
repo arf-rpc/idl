@@ -8,11 +8,9 @@ import (
 )
 
 func TestFullParse(t *testing.T) {
-	fe, err := New("fixtures/full.arf")
+	fe, err := Parse("fixtures/full.arf")
 	require.NoError(t, err)
 	require.NotNil(t, fe)
-	err = fe.Run()
-	require.NoError(t, err)
 }
 
 func TestMethodParamsMustBeStructOrEnum(t *testing.T) {
@@ -143,7 +141,7 @@ func TestDuplicateImportAliases(t *testing.T) {
 	fe, err := New("fixtures/duplicate_import_aliases.arf")
 	require.NoError(t, err)
 	require.NotNil(t, fe)
-	err = fe.Run()
+	_, err = fe.Run()
 	require.Error(t, err)
 }
 

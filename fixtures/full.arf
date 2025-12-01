@@ -50,6 +50,7 @@ enum Mode {
     FIRST = 1;
     SECOND = 2;
     THIRD = 3;
+    FOURTH = 0x04;
 }
 
 # Service containing all 16 method signatures

@@ -14,6 +14,7 @@ const (
 	tokenTypeComment
 	tokenTypeIdentifier
 	tokenTypeNumber
+	tokenTypeHex
 	tokenTypeString
 	tokenTypeEqual
 	tokenTypeLeftCurly
@@ -48,6 +49,7 @@ var tokenTypeAsString = map[tokenType]string{
 	tokenTypePeriod:      "Period",
 	tokenTypeAtSign:      "AtSign",
 	tokenTypeArrow:       "Arrow",
+	tokenTypeHex:         "Hex",
 }
 
 type token struct {

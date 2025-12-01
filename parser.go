@@ -2,6 +2,7 @@ package idl
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -125,8 +126,7 @@ func (p *parser) eof() bool {
 func (p *parser) expect(expected tokenType) *token {
 	pk := p.peek()
 	if pk.Type != expected {
-		extra := ""
-		msg := fmt.Sprintf("Expected %s but got %s at line %d column %d%s", expected, pk.Type, pk.Line, pk.Column, extra)
+		msg := fmt.Sprintf("Expected %s but got %s at line %d column %d", expected, pk.Type, pk.Line, pk.Column)
 		p.errorf("%s", msg)
 		return nil
 	}
@@ -517,16 +517,40 @@ func (p *parser) parseEnumMember() ast.EnumMember {
 		return member
 	}
 
-	if value := p.expect(tokenTypeNumber); value == nil {
-		p.consumeUntilSemiOrLinebreak()
-		return member
-	} else {
-		valueInt, err := strconv.Atoi(value.Value)
+	switch p.peek().Type {
+	case tokenTypeNumber:
+		value := p.advance()
+		valueInt, err := strconv.ParseInt(value.Value, 10, 64)
 		if err != nil {
 			p.errorf("failed parsing enum member value %s at line %d, column %d: %s", value.Value, value.Line, value.Column, err)
-		} else {
-			member.Value = valueInt
+			break
 		}
+		if valueInt < 0 || valueInt > math.MaxInt16 {
+			p.errorf("enum member value %s underflows or overflows uint16 at line %d, column %d: %s", value.Value, value.Line, value.Column, err)
+			break
+		}
+
+		member.Value = int(valueInt)
+
+	case tokenTypeHex:
+		value := p.advance()
+		valueInt, err := strconv.ParseInt(value.Value[2:], 16, 64)
+		if err != nil {
+			p.errorf("failed parsing enum member value %s at line %d, column %d: %s", value.Value, value.Line, value.Column, err)
+			break
+		}
+		if valueInt < 0 || valueInt > math.MaxInt16 {
+			p.errorf("enum member value %s underflows or overflows uint16 at line %d, column %d: %s", value.Value, value.Line, value.Column, err)
+			break
+		}
+		member.Value = int(valueInt)
+
+	default:
+		pk := p.peek()
+		msg := fmt.Sprintf("Expected Number of Hex but got %s at line %d column %d", pk.Type, pk.Line, pk.Column)
+		p.errorf("%s", msg)
+		p.consumeUntilSemiOrLinebreak()
+		return member
 	}
 
 	if p.expect(tokenTypeSemi) == nil {

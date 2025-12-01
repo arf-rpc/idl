@@ -46,6 +46,13 @@ func (s *lexer) peek() rune {
 	return s.data[s.pos]
 }
 
+func (s *lexer) peek1() rune {
+	if s.pos+1 >= s.len {
+		return 0
+	}
+	return s.data[s.pos+1]
+}
+
 func (s *lexer) mark() {
 	s.startPos = s.pos
 	s.startLine = s.line
@@ -104,6 +111,10 @@ func isDigit(r rune) bool {
 	return r >= '0' && r <= '9'
 }
 
+func isHex(r rune) bool {
+	return (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')
+}
+
 func isAlpha(r rune) bool {
 	return isAscii(r) || isDigit(r)
 }
@@ -148,7 +159,11 @@ func (s *lexer) scan() {
 			if simple, ok := simpleTokens[p]; ok {
 				s.pushSimple(simple)
 			} else if isDigit(p) {
-				s.parseNumber()
+				if s.peek1() == 'x' {
+					s.parseHex()
+				} else {
+					s.parseNumber()
+				}
 			} else if isAscii(p) {
 				s.parseIdentifier()
 			} else {
@@ -214,6 +229,16 @@ func (s *lexer) parseNumber() {
 		s.advance()
 	}
 	s.pushToken(tokenTypeNumber)
+}
+
+func (s *lexer) parseHex() {
+	s.mark()
+	s.advance() // consume 0
+	s.advance() // consume x
+	for isHex(s.peek()) {
+		s.advance()
+	}
+	s.pushToken(tokenTypeHex)
 }
 
 func (s *lexer) parseIdentifier() {

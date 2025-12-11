@@ -110,6 +110,9 @@ func (p *parser) errorf(format string, args ...interface{}) {
 }
 
 func (p *parser) peek() token {
+	if p.pos >= len(p.tokens) {
+		return token{Type: tokenTypeEOF}
+	}
 	return p.tokens[p.pos]
 }
 

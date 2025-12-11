@@ -115,12 +115,19 @@ func (p *validatorP1) validateMethodParams(m *ast.ServiceMethod) {
 	}
 
 	hasStreamingOutput := false
+	hasUnaryOutput := false
 	for _, r := range m.Returns {
 		if r.Stream && hasStreamingOutput {
 			p.Errorf("method %s can only have one stream return at %s, line %d, column %d", m.Name, r.Position.Filename, r.Position.Line, r.Position.Column)
 		} else if r.Stream {
 			hasStreamingOutput = true
+		} else if !r.Stream {
+			hasUnaryOutput = true
 		}
+	}
+
+	if hasUnaryOutput && hasStreamingOutput {
+		p.Errorf("method %s declares both unary output and stream output, which is not allowed at line %d, column %d", m.Name, m.Position.Line, m.Position.Column)
 	}
 }
 

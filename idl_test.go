@@ -158,3 +158,13 @@ func TestReservedWordsAsIdentifiers(t *testing.T) {
 		require.NotEmpty(t, errs, src)
 	}
 }
+
+func TestRejectsUnaryOutputAndOutputStream(t *testing.T) {
+	src := `package p; struct S{ f string; } service X{ M() -> (S, stream S); }`
+	tokens, errs := lexFile([]byte(src), nil)
+	require.Empty(t, errs)
+	fe, errs := parse("", tokens, nil)
+	require.Empty(t, errs)
+	err := validatePhase1(map[string]*ast.File{"": fe}, "")
+	require.Error(t, err)
+}

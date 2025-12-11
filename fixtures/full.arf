@@ -71,14 +71,14 @@ service FeatureTestService {
     # NYNN — unary output only
     NYNN() -> Everything;
 
-    # NYNY — unary output + server stream
-    NYNY() -> (Everything, stream Everything.Nested);
+    # NYNY — unary output + server stream, invalid
+    # NYNY() -> (Everything, stream Everything.Nested);
 
     # NYYN — unary output + client stream
     NYYN(stream Everything.Nested) -> Everything;
 
-    # NYYY — unary output + both streams
-    NYYY(stream Everything.Nested) -> (Everything, stream Everything.Nested);
+    # NYYY — unary output + both streams, invalid
+    # NYYY(stream Everything.Nested) -> (Everything, stream Everything.Nested);
 
     # YNNN — unary input only
     YNNN(i Everything);
@@ -95,14 +95,14 @@ service FeatureTestService {
     # YYNN — unary input + unary output
     YYNN(i Everything) -> Everything;
 
-    # YYNY — unary input + unary output + server stream
-    YYNY(i Everything) -> (Everything, stream Everything.Nested);
+    # YYNY — unary input + unary output + server stream, invalid
+    # YYNY(i Everything) -> (Everything, stream Everything.Nested);
 
     # YYYN — unary input + unary output + client stream
     YYYN(i Everything, stream Everything.Nested) -> Everything;
 
-    # YYYY — unary input + unary output + both streams
-    YYYY(i Everything, stream Everything.Nested) -> (Everything, stream Everything.Nested);
+    # YYYY — unary input + unary output + both streams, invalid
+    # YYYY(i Everything, stream Everything.Nested) -> (Everything, stream Everything.Nested);
 }
 
 # Reopen service

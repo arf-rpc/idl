@@ -129,6 +129,10 @@ func (p *validatorP1) validateMethodParams(m *ast.ServiceMethod) {
 	if hasUnaryOutput && hasStreamingOutput {
 		p.Errorf("method %s declares both unary output and stream output, which is not allowed at line %d, column %d", m.Name, m.Position.Line, m.Position.Column)
 	}
+
+	if hasStreamingInput && hasUnaryOutput {
+		p.Errorf("method %s declares both unary output and stream input, which is not allowed at line %d, column %d", m.Name, m.Position.Line, m.Position.Column)
+	}
 }
 
 func (p *validatorP1) validateEnum(e *ast.Enum) {
